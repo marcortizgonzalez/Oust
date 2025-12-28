@@ -4,6 +4,11 @@ import edu.upc.epsevg.prop.oust.GameStatus;
 import edu.upc.epsevg.prop.oust.PlayerType;
 import java.awt.Point;
 
+/**
+ * Extensió de GameStatus amb una funció d'avaluació heurística personalitzada.
+ * Aquesta classe s'utilitza principalment per a proves unitàries i validació
+ * de l'heurística utilitzada pel jugador principal.
+ */
 public class GameStatusTunned extends GameStatus {
 
     public GameStatusTunned(GameStatus gs) {
@@ -15,48 +20,81 @@ public class GameStatusTunned extends GameStatus {
     }
 
     /**
-     * Heurística: Cuenta manual de piedras y arreglos de sintaxis.
+     * Calcula l'avaluació heurística de l'estat.
+     * Utilitza la mateixa lògica de connectivitat i penalització que el jugador principal.
+     * * @return Puntuació de l'estat (positiva si afavoreix al jugador actual).
      */
-    public int getHeuristicValue() {
-        // 1. Detección de final de partida
+    public int getHeuristicEvaluation() {
         if (isGameOver()) {
             PlayerType winner = GetWinner();
-            if (winner == getCurrentPlayer()) return 100000;
-            // Usar .opposite() sobre la instancia, no estático
-            if (winner == getCurrentPlayer().opposite()) return -100000;
-            return 0;
+            if (winner != null) {
+                return (winner == getCurrentPlayer()) ? 10000000 : -10000000;
+            }
+            return 0; // Empat
         }
 
+        int size = getSize();
         PlayerType me = getCurrentPlayer();
-        // Usar .opposite() sobre la instancia
-        PlayerType opp = me.opposite();
+        
+        boolean[][] visited = new boolean[size][size];
+        
+        double myScore = 0;
+        double oppScore = 0;
+        int myPieces = 0;
+        int oppPieces = 0;
 
-        // 2. Material (Contamos las piedras manualmente porque getScore falla)
-        int myStones = 0;
-        int oppStones = 0;
-        int size = getSize(); // Obtenemos el tamaño del tablero
-
-        // Recorremos el tablero hexagonal (Lógica extraída de Board.java)
-        for (int i = 0; i < 2 * size - 1; i++) {
-            int j = Math.max((i - size) + 1, 0);
-            int j_end = Math.min(size + i, 2 * size - 1);
-            
-            for (; j < j_end; j++) {
-                PlayerType color = getColor(i, j); // Obtenemos quién ocupa la casilla
-                if (color == me) {
-                    myStones++;
-                } else if (color == opp) {
-                    oppStones++;
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (!visited[i][j]) {
+                    PlayerType p = getColor(i, j);
+                    if (p != null) {
+                        int groupSize = countGroupSize(i, j, p, visited, size);
+                        
+                        // Heurística exponencial per premiar grups grans
+                        double val = Math.pow(groupSize, 2);
+                        
+                        if (p == me) {
+                            myScore += val;
+                            myPieces += groupSize;
+                        } else {
+                            // Penalització agressiva (x2) als grups del rival
+                            oppScore += val * 2.0; 
+                            oppPieces += groupSize;
+                        }
+                    }
                 }
             }
         }
+        
+        // Puntuació base per material
+        myScore += myPieces * 5;
+        oppScore += oppPieces * 5;
 
-        // Diferencia de piezas * 100
-        int materialScore = (myStones - oppStones) * 100;
+        return (int) (myScore * 10 - oppScore * 10);
+    }
 
-        // 3. Movilidad * 10
-        int mobilityScore = getMoves().size() * 10;
+    /**
+     * Mètode recursiu per comptar la mida d'un grup de fitxes connectades.
+     * * @param x Coordenada X.
+     * @param y Coordenada Y.
+     * @param p Tipus de jugador a comprovar.
+     * @param visited Matriu de visitats per evitar cicles.
+     * @param size Mida del tauler.
+     * @return Nombre de fitxes connectades.
+     */
+    private int countGroupSize(int x, int y, PlayerType p, boolean[][] visited, int size) {
+        if (x < 0 || y < 0 || x >= size || y >= size) return 0;
+        if (visited[x][y]) return 0;
+        if (getColor(x, y) != p) return 0;
 
-        return materialScore + mobilityScore;
+        visited[x][y] = true;
+        int count = 1;
+        
+        int[][] dirs = {{1,0}, {1,-1}, {0,-1}, {-1,0}, {-1,1}, {0,1}};
+
+        for (int[] d : dirs) {
+            count += countGroupSize(x + d[0], y + d[1], p, visited, size);
+        }
+        return count;
     }
 }

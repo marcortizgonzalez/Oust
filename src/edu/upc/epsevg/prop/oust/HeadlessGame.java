@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.upc.epsevg.prop.oust.players.OrtizSerralta.PlayerMiniMaxIDS;
+
 /**
  *
  * @author bernat
@@ -29,17 +31,24 @@ public class HeadlessGame {
     public static void main(String[] args) {
 
 
-        IPlayer player1 = new MalaOustiaPlayer();        
+        //IPlayer player1 = new MalaOustiaPlayer();        
+        //IPlayer player1 = new edu.upc.epsevg.prop.oust.players.OrtizSerralta.PlayerMiniMaxIDS();
+        IPlayer player1 = new PlayerMiniMaxIDS();
+        //IPlayer player2 = new MalaOustiaPlayer();  
         IPlayer player2 = new MOustValuablePlayer();
         
         
-        HeadlessGame game1 = new HeadlessGame(player1, player2, 7, 3/*s timeout*/, 5/*games*/);
+        HeadlessGame game1 = new HeadlessGame(player1, player2, 5, 1/*s timeout*/, 5/*games*/);
         GameResult gr1 = game1.start();
         System.out.println(gr1);
         
-        HeadlessGame game2 = new HeadlessGame(player2, player1, 7, 3/*s timeout*/, 5/*games*/);
+        
+        HeadlessGame game2 = new HeadlessGame(player2, player1, 5, 5/*s timeout*/, 5/*games*/);
         GameResult gr2 = game2.start();       
         System.out.println(gr2);
+        
+
+        
 
     }
 
