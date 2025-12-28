@@ -2,7 +2,7 @@ package edu.upc.epsevg.prop.oust;
 
 import edu.upc.epsevg.prop.oust.players.HumanPlayer;
 import edu.upc.epsevg.prop.oust.players.RandomPlayer;
-
+import edu.upc.epsevg.prop.oust.players.OrtizSerralta.PlayerMiniMaxIDS;
 
 import javax.swing.SwingUtilities;
 
@@ -39,9 +39,11 @@ public class Game {
                 // Enjoy!
                 //---------------------------------------------
                 //IPlayer player1 = new RandomPlayer("");
-                IPlayer player1 = new MOustValuablePlayer();
-                IPlayer player2 = new HumanPlayer("Human2");
-                
+                //IPlayer player1 = new MOustValuablePlayer();
+                //IPlayer player2 = new HumanPlayer("Human2");
+                IPlayer player1 = new PlayerMiniMaxIDS();
+                //IPlayer player2 = new RandomPlayer("Random");
+                IPlayer player2 = new MOustValuablePlayer();
                                 
                 
                 //---------------------------------------------
